@@ -52,7 +52,7 @@ lambda =
             ELambda
             <$> (keyword "\\" *> many1 (token varRegexp) <* keyword ".")
             <*>  expr
-            <?> "lambda"
+            <?> "lambda abstraction"
 
 
 nameRegexp : Parser s String
@@ -62,26 +62,26 @@ nameRegexp =
 
 name : Parser s E
 name =
-    EName <$> nameRegexp <?> "identify"
+    EName <$> nameRegexp <?> "name"
 
 
 stmt : Parser s ( List E )
 stmt = many (expr <* (string ";"))
 
 
-apply : Parser s E
-apply =
+application : Parser s E
+application =
     let
         append e =
             map (\es -> e :: es) (many1 term)
     in
-    EApp <$> (term |> andThen append)
+    EApp <$> (term |> andThen append) <?> "application"
 
 expr : Parser s E
 expr =
     lazy <|
         \() ->
-            apply <|> term
+            application <|> term
 
 
 term : Parser s E
