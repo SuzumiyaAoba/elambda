@@ -2,12 +2,12 @@ module PureLambda.Parser exposing (..)
 
 import Combine exposing (..)
 
-type E = EVar String
-       | ELambda ( List String ) E
+type Expr a = EVar a
+       | EAbs (List a) (Expr a)
        | EName String
-       | EApp ( List E )
-       | EComment String
+       | EApp (List (Expr a))
 
+type alias E = Expr String
 
 comment : Parser s String
 comment =
@@ -49,7 +49,7 @@ lambda : Parser s E
 lambda =
     lazy <|
         \() ->
-            ELambda
+            EAbs
             <$> (keyword "\\" *> many1 (token varRegexp) <* keyword ".")
             <*>  expr
             <?> "lambda abstraction"
