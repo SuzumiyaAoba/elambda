@@ -15,6 +15,18 @@ find k env =
     Maybe.withDefault 0 (get k (second env))
 
 
+updateId : Int -> Env -> Env
+updateId id_ (id, dict) = (id_, dict)
+
+
+dict : Env -> Dict String Id
+dict = second
+
+
+nextId : Env -> Id
+nextId = first
+
+
 type alias A = Expr (String, Id)
 
 conv_in : Env -> A -> (A, Env)
@@ -28,22 +40,22 @@ conv_in env e =
             (EName n, env)
 
         EAbs xs body ->
-            let id = first env in
+            let id = nextId env in
             let (id_, xs_) = List.foldr
                              (\(x, _) (id, acc) -> (id+1, (x, id)::acc))
                              (id, [])
                              xs
             in
-            let env_ = (id_, union (fromList xs_) (second env)) in
+            let env_ = (id_, union (fromList xs_) (dict env)) in
             let (body_, env__) = conv_in env_ body in
             (EAbs xs_ body_, env__)
 
         EApp es ->
-            let update e (acc, env) =
-                let (a, env_) = conv_in env e in
-                (a::acc, env_)
+            let alpha e (acc, env) =
+                let (a, (id, _)) = conv_in env e in
+                (a::acc, updateId id env)
             in
-            let (es_, env_) = List.foldr update ([], env) es in
+            let (es_, env_) = List.foldr alpha ([], env) es in
             (EApp es_, env_)
 
 
